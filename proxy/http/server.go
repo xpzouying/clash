@@ -70,6 +70,7 @@ func canActivate(loginStr string, authenticator auth.Authenticator, cache *cache
 	return
 }
 
+// HandleConn 处理请求的连接
 func HandleConn(conn net.Conn, cache *cache.Cache) {
 	br := bufio.NewReader(conn)
 
@@ -100,6 +101,8 @@ keepAlive:
 		}
 	}
 
+	// 创建连接时，会接收到2种情况的请求：一种是CONNECT命令；另外就是其他。
+	// 接收到请求后需要将连接加入到tunnel的连接池里面。（其中使用channel实现）
 	if request.Method == http.MethodConnect {
 		_, err := conn.Write([]byte("HTTP/1.1 200 Connection established\r\n\r\n"))
 		if err != nil {

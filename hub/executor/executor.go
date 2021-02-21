@@ -69,9 +69,16 @@ func ApplyConfig(cfg *config.Config, force bool) {
 	mux.Lock()
 	defer mux.Unlock()
 
+	// 用户账号密码。这个是什么？admin用户密码登陆之类的吗？
 	updateUsers(cfg.Users)
+
+	// 配置通用的配置
 	updateGeneral(cfg.General, force)
+
+	// 配置代理
 	updateProxies(cfg.Proxies, cfg.Providers)
+
+	// 更新规则
 	updateRules(cfg.Rules)
 	updateDNS(cfg.DNS)
 	updateHosts(cfg.Hosts)
@@ -168,6 +175,7 @@ func updateGeneral(general *config.General, force bool) {
 	tunnel.SetMode(general.Mode)
 	resolver.DisableIPv6 = !general.IPv6
 
+	// 绑定特定的网卡？
 	if general.Interface != "" {
 		dialer.DialHook = dialer.DialerWithInterface(general.Interface)
 		dialer.ListenPacketHook = dialer.ListenPacketWithInterface(general.Interface)
@@ -183,13 +191,18 @@ func updateGeneral(general *config.General, force bool) {
 	allowLan := general.AllowLan
 	P.SetAllowLan(allowLan)
 
+	// 设置特定的绑定地址
 	bindAddress := general.BindAddress
 	P.SetBindAddress(bindAddress)
 
+	// 创建http连接的透明代理。其中会启动goroutine监听http请求。
+	//
+	// HTTP是建立在tcp之上，所以底层其实是建立了tcp连接。
 	if err := P.ReCreateHTTP(general.Port); err != nil {
 		log.Errorln("Start HTTP server error: %s", err.Error())
 	}
 
+	// socks连接的底层可以是tcp和udp，所以同时会建立tcp连接和udp连接及其的连接监听。
 	if err := P.ReCreateSocks(general.SocksPort); err != nil {
 		log.Errorln("Start SOCKS5 server error: %s", err.Error())
 	}

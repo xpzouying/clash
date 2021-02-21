@@ -63,6 +63,8 @@ func ReCreateHTTP(port int) error {
 	httpMux.Lock()
 	defer httpMux.Unlock()
 
+	// 如果是allowLan的话，那么监听的地址就是网卡IP或者0.0.0.0
+	// 否则，则监听在127.0.0.1上面
 	addr := genAddr(bindAddress, port, allowLan)
 
 	if httpListener != nil {
@@ -73,10 +75,14 @@ func ReCreateHTTP(port int) error {
 		httpListener = nil
 	}
 
+	// 如果监听的端口是0。对于golang/socket应该是可以的，
+	// 会让系统随机挑选一个端口。
+	// 但是对于clash来说是禁止。因为随机挑选出来的端口对于用户使用来说没有意义。
 	if portIsZero(addr) {
 		return nil
 	}
 
+	// 启动http的监听
 	var err error
 	httpListener, err = http.NewHttpProxy(addr)
 	if err != nil {

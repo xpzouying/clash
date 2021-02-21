@@ -68,10 +68,12 @@ func main() {
 		C.SetConfig(configFile)
 	}
 
+	// 1.初始化配置文件；2.下载MMDB文件
 	if err := config.Init(C.Path.HomeDir()); err != nil {
 		log.Fatalln("Initial configuration directory error: %s", err.Error())
 	}
 
+	// 选择的是测试配置文件，则检查配置文件后即退出
 	if testConfig {
 		if _, err := executor.Parse(); err != nil {
 			log.Errorln(err.Error())
@@ -93,6 +95,7 @@ func main() {
 		options = append(options, hub.WithSecret(secret))
 	}
 
+	// 根据配置文件启动真正的程序。进行服务监听以及透明网关的功能。
 	if err := hub.Parse(options...); err != nil {
 		log.Fatalln("Parse config error: %s", err.Error())
 	}
