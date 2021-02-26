@@ -33,11 +33,13 @@ var (
 	udpTimeout = 60 * time.Second
 )
 
+// 使用 init() 来激活后台运行函数
 func init() {
 	go process()
 }
 
 // Add request to queue
+// 如果有新的连接建立，则传入 tcp连接队列
 func Add(ctx C.ConnContext) {
 	tcpQueue <- ctx
 }
@@ -243,6 +245,7 @@ func handleUDPConn(packet *inbound.PacketAdapter) {
 	}()
 }
 
+// 处理 tcp连接
 func handleTCPConn(ctx C.ConnContext) {
 	defer ctx.Conn().Close()
 
@@ -257,6 +260,7 @@ func handleTCPConn(ctx C.ConnContext) {
 		return
 	}
 
+	// 解析 metadata 的代理规则
 	proxy, rule, err := resolveMetadata(ctx, metadata)
 	if err != nil {
 		log.Warnln("[Metadata] parse failed: %s", err.Error())
@@ -322,6 +326,7 @@ func match(metadata *C.Metadata) (C.Proxy, C.Rule, error) {
 			resolved = true
 		}
 
+		// 有规则指定的代理
 		if rule.Match(metadata) {
 			adapter, ok := proxies[rule.Adapter()]
 			if !ok {

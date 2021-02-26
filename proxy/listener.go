@@ -150,6 +150,7 @@ func ReCreateRedir(port int) error {
 
 	addr := genAddr(bindAddress, port, allowLan)
 
+	// 如果以前的socket已经在监听，则先关闭。
 	if redirListener != nil {
 		if redirListener.Address() == addr {
 			return nil
