@@ -18,12 +18,15 @@ import (
 
 type HttpListener struct {
 	net.Listener
+	// 只是为了返回监听的具体地址
 	address string
 	closed  bool
 	cache   *cache.Cache
 }
 
+// NewHttpProxy 建立http代理监听
 func NewHttpProxy(addr string) (*HttpListener, error) {
+	// 这里使用了自己建立tcp连接，进行监听到处理连接
 	l, err := net.Listen("tcp", addr)
 	if err != nil {
 		return nil, err
@@ -75,12 +78,16 @@ func HandleConn(conn net.Conn, cache *cache.Cache) {
 	br := bufio.NewReader(conn)
 
 keepAlive:
+
+	// 通过 http.ReadRequest 读出来 http 的信息
 	request, err := http.ReadRequest(br)
 	if err != nil || request.URL.Host == "" {
 		conn.Close()
 		return
 	}
 
+	// 如果是 keepalive，则一直拿着这个连接。相当于这个协程一直在后台工作，为这个连接服务，不退出。
+	// HTTP keepAlive的介绍：https://zh.wikipedia.org/wiki/HTTP%E6%8C%81%E4%B9%85%E8%BF%9E%E6%8E%A5
 	keepAlive := strings.TrimSpace(strings.ToLower(request.Header.Get("Proxy-Connection"))) == "keep-alive"
 	authenticator := authStore.Authenticator()
 	if authenticator != nil {
@@ -103,15 +110,19 @@ keepAlive:
 
 	// 创建连接时，会接收到2种情况的请求：一种是CONNECT命令；另外就是其他。
 	// 接收到请求后需要将连接加入到tunnel的连接池里面。（其中使用channel实现）
+	// 如果是 CONNECT 指令，那么需要回复请求端连接已经建立。
 	if request.Method == http.MethodConnect {
 		_, err := conn.Write([]byte("HTTP/1.1 200 Connection established\r\n\r\n"))
 		if err != nil {
 			conn.Close()
 			return
 		}
+
+		// 加入连接队列中
 		tunnel.Add(adapters.NewHTTPS(request, conn))
 		return
 	}
 
+	// 加入连接队列中
 	tunnel.Add(adapters.NewHTTP(request, conn))
 }
