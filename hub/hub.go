@@ -28,6 +28,7 @@ func WithSecret(secret string) Option {
 
 // Parse call at the beginning of clash
 func Parse(options ...Option) error {
+	// 解析配置文件
 	cfg, err := executor.Parse()
 	if err != nil {
 		return err

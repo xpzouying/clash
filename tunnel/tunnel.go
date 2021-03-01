@@ -76,6 +76,8 @@ func Providers() map[string]provider.ProxyProvider {
 
 // UpdateProxies handle update proxies
 func UpdateProxies(newProxies map[string]C.Proxy, newProviders map[string]provider.ProxyProvider) {
+	log.Debugln("[zy-debug] UpdateProxies: newProxies:%+v\nnewProviders:%+v", newProxies, newProviders)
+
 	configMux.Lock()
 	proxies = newProxies
 	providers = newProviders
@@ -260,12 +262,15 @@ func handleTCPConn(ctx C.ConnContext) {
 		return
 	}
 
-	// 解析 metadata 的代理规则
+	log.Debugln("[zy-debug] metadata: %#v", metadata)
+
+	// 解析 metadata 的代理规则。
 	proxy, rule, err := resolveMetadata(ctx, metadata)
 	if err != nil {
 		log.Warnln("[Metadata] parse failed: %s", err.Error())
 		return
 	}
+	log.Debugln("[zy-debug] proxy=%+v, rule=%+v", proxy, rule)
 
 	remoteConn, err := proxy.Dial(metadata)
 	if err != nil {

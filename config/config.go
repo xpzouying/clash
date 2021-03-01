@@ -200,6 +200,7 @@ func ParseRawConfig(rawCfg *RawConfig) (*Config, error) {
 	}
 	config.General = general
 
+	// proxy 代理的解析
 	proxies, providers, err := parseProxies(rawCfg)
 	if err != nil {
 		return nil, err

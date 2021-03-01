@@ -73,8 +73,13 @@ func canActivate(loginStr string, authenticator auth.Authenticator, cache *cache
 	return
 }
 
-// HandleConn 处理请求的连接
+// HandleConn 处理请求的连接。发起一次连接的时候，就会进入到这个函数进行处理。
 func HandleConn(conn net.Conn, cache *cache.Cache) {
+	log.Debugln("[zy-debug] HandleConn: handle a new connection: %+v", conn)
+	defer func() {
+		log.Debugln("[zy-debug Handle Conn: call defer, function finish")
+	}()
+
 	br := bufio.NewReader(conn)
 
 keepAlive:
@@ -85,6 +90,8 @@ keepAlive:
 		conn.Close()
 		return
 	}
+
+	log.Debugln("[zy-debug] HandleConn: http request: %+v", request)
 
 	// 如果是 keepalive，则一直拿着这个连接。相当于这个协程一直在后台工作，为这个连接服务，不退出。
 	// HTTP keepAlive的介绍：https://zh.wikipedia.org/wiki/HTTP%E6%8C%81%E4%B9%85%E8%BF%9E%E6%8E%A5

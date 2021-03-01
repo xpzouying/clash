@@ -30,6 +30,7 @@ func NewDecoder(option Option) *Decoder {
 
 // Decode transform a map[string]interface{} to a struct
 func (d *Decoder) Decode(src map[string]interface{}, dst interface{}) error {
+	// 如果不是指针，则返回错误。表示：只能给指针进行赋值。
 	if reflect.TypeOf(dst).Kind() != reflect.Ptr {
 		return fmt.Errorf("Decode must recive a ptr struct")
 	}

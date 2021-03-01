@@ -5,15 +5,19 @@ import (
 
 	"github.com/Dreamacro/clash/common/structure"
 	C "github.com/Dreamacro/clash/constant"
+	"github.com/Dreamacro/clash/log"
 )
 
 func ParseProxy(mapping map[string]interface{}) (C.Proxy, error) {
+	log.Debugln("[zy-debug] ParseProxy: mapping: %+v", mapping)
+
 	decoder := structure.NewDecoder(structure.Option{TagName: "proxy", WeaklyTypedInput: true})
 	proxyType, existType := mapping["type"].(string)
 	if !existType {
 		return nil, fmt.Errorf("missing type")
 	}
 
+	// 解析各种协议的proxy
 	var (
 		proxy C.ProxyAdapter
 		err   error
